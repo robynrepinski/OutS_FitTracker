@@ -13,6 +13,7 @@ import {
   Lightbulb
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { generateWorkoutPlan } from '../lib/gemini';
 
 interface GoalSettingProps {
   onBack?: () => void;
@@ -174,21 +175,37 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ onBack }) => {
     setSubmitError('');
 
     try {
-      // Here you would save to Supabase user_goals table
-      console.log('Saving goal data:', {
-        userId: user?.id,
-        ...goalData,
-        createdAt: new Date().toISOString()
-      });
+      if (!user || !profile) {
+        throw new Error('User profile not found');
+      }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Generating personalized workout plan...');
+      console.log('User Profile:', profile);
+      console.log('Goal Data:', goalData);
       
-      // For now, just log the data
-      console.log('Goal saved successfully!');
+      // Generate personalized workout plan using Gemini
+      const result = await generateWorkoutPlan(profile, goalData);
       
-      // In a real app, you'd redirect to dashboard or show success
-      alert('Goal created successfully! 🎉');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to generate workout plan');
+      }
+      
+      console.log('Generated Workout Plan:', result.data);
+      
+      // Here you would save both the goal data and workout plan to Supabase
+      const goalRecord = {
+        userId: user.id,
+        ...goalData,
+        workoutPlan: result.data,
+        createdAt: new Date().toISOString()
+      };
+      
+      console.log('Saving to database:', goalRecord);
+      
+      // TODO: Save to Supabase user_goals table
+      // await supabase.from('user_goals').insert(goalRecord);
+      
+      alert(`🎉 Your personalized "${result.data.plan_name}" plan has been created!\n\nCheck the console to see your custom workout plan.`);
       
       // Call onBack if provided to return to dashboard
       if (onBack) {
@@ -551,12 +568,12 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ onBack }) => {
                 {isSubmitting ? (
                   <div className="flex items-center justify-center space-x-3">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    <span>Creating your perfect plan...</span>
+                    <span>AI is crafting your perfect plan...</span>
                   </div>
                 ) : (
                   <div className="flex items-center justify-center space-x-3">
                     <Sparkles className="w-6 h-6" />
-                    <span>Generate My Plan</span>
+                    <span>Generate My AI Plan</span>
                     <Sparkles className="w-6 h-6" />
                   </div>
                 )}
@@ -564,9 +581,9 @@ const GoalSetting: React.FC<GoalSettingProps> = ({ onBack }) => {
 
               {isSubmitting && (
                 <div className="mt-4 space-y-2">
-                  <p className="text-gray-600 text-sm">🤖 Analyzing your goals and preferences...</p>
-                  <p className="text-gray-600 text-sm">💪 Crafting personalized workouts...</p>
-                  <p className="text-gray-600 text-sm">🎯 Optimizing for your success...</p>
+                  <p className="text-gray-600 text-sm">🤖 AI is analyzing your goals and personal story...</p>
+                  <p className="text-gray-600 text-sm">💪 Crafting workouts that fit YOUR life...</p>
+                  <p className="text-gray-600 text-sm">🎯 Personalizing every detail for your success...</p>
                 </div>
               )}
             </div>
