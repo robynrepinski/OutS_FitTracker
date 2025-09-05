@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import ProfileSetup from './components/ProfileSetup';
+import Dashboard from './components/Dashboard';
+import GoalSetting from './components/GoalSetting';
 import { useAuth } from './contexts/AuthContext';
 
 interface FormData {
@@ -15,7 +18,7 @@ interface FormErrors {
 }
 
 function App() {
-  const { user, loading, signUp, signIn, signInWithGoogle, signOut } = useAuth();
+  const { user, profile, loading, signUp, signIn, signInWithGoogle } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -30,53 +33,34 @@ function App() {
 
   // Show loading spinner while checking authentication
   if (loading) {
+    console.log('App: Still loading - user:', !!user, 'profile:', !!profile, 'loading:', loading)
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading FitTracker...</p>
+          <p className="text-xs text-gray-400 mt-2">
+            {user ? 'Loading profile...' : 'Checking authentication...'}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Show simple dashboard if user is authenticated
-  if (user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600">
-        <div className="container mx-auto px-4 py-6 max-w-4xl">
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Welcome to FitTracker! 👋
-                </h1>
-                <p className="text-gray-600">You are successfully logged in as: {user.email}</p>
-              </div>
-              <button
-                onClick={signOut}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">🎉 Authentication Working!</h2>
-            <p className="text-gray-600 mb-4">
-              Basic login/logout is now functional. We can add profile features step by step.
-            </p>
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-700 font-medium">✅ User authenticated successfully</p>
-              <p className="text-green-600 text-sm mt-1">Ready to add more features!</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  // Show profile setup if user exists but no profile
+  if (user && !profile) {
+    console.log('App: Showing profile setup for user:', user?.email)
+    return <ProfileSetup />;
   }
 
+  // Show dashboard if user is authenticated and has profile
+  if (user && profile) {
+    console.log('App: Showing dashboard for user:', user?.email, 'profile:', profile?.first_name)
+    return <Dashboard />;
+  }
+
+  console.log('App: Showing auth form - no user authenticated')
+  
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
