@@ -38,32 +38,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    console.log('AuthProvider: Initializing auth state...')
-    
     const initializeAuth = async () => {
       try {
-        console.log('AuthProvider: Getting initial session...')
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('AuthProvider: Error getting session:', error)
+          console.error('Error getting session:', error)
           setLoading(false)
           return
         }
         
-        console.log('AuthProvider: Initial session result:', session)
         setSession(session)
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          console.log('AuthProvider: User found, fetching profile for:', session.user.id)
           await fetchProfile(session.user.id)
         } else {
-          console.log('AuthProvider: No user found, setting loading to false')
           setLoading(false)
         }
       } catch (error) {
-        console.error('AuthProvider: Error in initializeAuth:', error)
+        console.error('Error in initializeAuth:', error)
         setLoading(false)
       }
     }
@@ -74,7 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('AuthProvider: Auth state changed:', event, session)
+      console.log('Auth state changed:', event)
       setSession(session)
       setUser(session?.user ?? null)
       
@@ -90,7 +84,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [])
 
   const fetchProfile = async (userId: string) => {
-    console.log('AuthProvider: Fetching profile for user:', userId)
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -98,27 +91,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', userId)
         .maybeSingle()
 
-      console.log('AuthProvider: Profile fetch result:', { data, error })
-      
       if (error) {
-        console.error('AuthProvider: Error fetching profile:', error)
-        console.log('AuthProvider: No profile found, user needs to complete setup')
+        console.error('Error fetching profile:', error)
         setProfile(null)
       } else {
         setProfile(data || null)
-        console.log('AuthProvider: Profile set:', data || 'null')
       }
     } catch (error) {
-      console.error('AuthProvider: Unexpected error fetching profile:', error)
+      console.error('Unexpected error fetching profile:', error)
       setProfile(null)
     } finally {
-      console.log('AuthProvider: Setting loading to false')
       setLoading(false)
     }
   }
 
   const signUp = async (email: string, password: string) => {
-    console.log('AuthProvider: Signing up user:', email)
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -127,7 +114,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const signIn = async (email: string, password: string) => {
-    console.log('AuthProvider: Signing in user:', email)
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -136,7 +122,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const signInWithGoogle = async () => {
-    console.log('AuthProvider: Signing in with Google')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -147,7 +132,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const signOut = async () => {
-    console.log('AuthProvider: Signing out')
     await supabase.auth.signOut()
     setProfile(null)
   }

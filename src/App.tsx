@@ -33,7 +33,6 @@ function App() {
 
   // Show loading spinner while checking authentication
   if (loading) {
-    console.log('App: Still loading - user:', !!user, 'profile:', !!profile, 'loading:', loading)
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
@@ -49,17 +48,14 @@ function App() {
 
   // Show profile setup if user exists but no profile
   if (user && !profile) {
-    console.log('App: Showing profile setup for user:', user?.email)
     return <ProfileSetup />;
   }
 
   // Show dashboard if user is authenticated and has profile
   if (user && profile) {
-    console.log('App: Showing dashboard for user:', user?.email, 'profile:', profile?.first_name)
     return <Dashboard />;
   }
 
-  console.log('App: Showing auth form - no user authenticated')
   
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
