@@ -33,11 +33,13 @@ function App() {
 
   // Show loading spinner while checking authentication
   if (loading) {
+    console.log('App: Showing loading screen, user:', user, 'profile:', profile, 'loading:', loading)
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Loading FitTracker...</p>
+          <p className="text-xs text-gray-400 mt-2">Checking authentication...</p>
         </div>
       </div>
     );
@@ -45,14 +47,18 @@ function App() {
 
   // Show profile setup if user exists but no profile
   if (user && !profile) {
+    console.log('App: Showing profile setup, user:', user?.email, 'profile:', profile)
     return <ProfileSetup />;
   }
 
   // Show dashboard if user is authenticated and has profile
   if (user && profile) {
+    console.log('App: Showing dashboard, user:', user?.email, 'profile name:', profile?.first_name)
     return <Dashboard />;
   }
 
+  console.log('App: Showing auth form, user:', user, 'profile:', profile)
+  
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 

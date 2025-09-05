@@ -36,15 +36,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [authError, setAuthError] = useState<string>('')
 
   useEffect(() => {
+    console.log('AuthProvider: Initializing auth state...')
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('AuthProvider: Initial session:', session)
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
+        console.log('AuthProvider: User found, fetching profile...')
         fetchProfile(session.user.id)
       } else {
+        console.log('AuthProvider: No user, setting loading to false')
         setLoading(false)
       }
     })
@@ -53,6 +59,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('AuthProvider: Auth state changed:', event, session)
       setSession(session)
       setUser(session?.user ?? null)
       
@@ -68,6 +75,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [])
 
   const fetchProfile = async (userId: string) => {
+    console.log('AuthProvider: Fetching profile for user:', userId)
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -75,14 +83,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', userId)
         .single()
 
+      console.log('AuthProvider: Profile fetch result:', { data, error })
+      
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error)
+        setAuthError(`Profile fetch error: ${error.message}`)
       } else {
         setProfile(data)
+        console.log('AuthProvider: Profile set:', data)
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
+      setAuthError(`Unexpected error: ${error}`)
     } finally {
+      console.log('AuthProvider: Setting loading to false')
       setLoading(false)
     }
   }
