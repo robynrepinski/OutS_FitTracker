@@ -36,24 +36,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [authError, setAuthError] = useState<string>('')
 
   useEffect(() => {
     console.log('AuthProvider: Initializing auth state...')
     
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('AuthProvider: Initial session:', session)
-      setSession(session)
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        console.log('AuthProvider: User found, fetching profile...')
-        fetchProfile(session.user.id)
-      } else {
-        console.log('AuthProvider: No user, setting loading to false')
+    const initializeAuth = async () => {
+      try {
+        console.log('AuthProvider: Getting initial session...')
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('AuthProvider: Error getting session:', error)
+          setLoading(false)
+          return
+        }
+        
+        console.log('AuthProvider: Initial session result:', session)
+        setSession(session)
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          console.log('AuthProvider: User found, fetching profile for:', session.user.id)
+          await fetchProfile(session.user.id)
+        } else {
+          console.log('AuthProvider: No user found, setting loading to false')
+          setLoading(false)
+        }
+      } catch (error) {
+        console.error('AuthProvider: Error in initializeAuth:', error)
         setLoading(false)
       }
-    })
+    }
+    
+    initializeAuth()
 
     // Listen for auth changes
     const {
@@ -77,38 +92,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchProfile = async (userId: string) => {
     console.log('AuthProvider: Fetching profile for user:', userId)
     try {
-      // First check if profiles table exists by trying to select from it
-      const { data: tableCheck, error: tableError } = await supabase
-        .from('profiles')
-        .select('count')
-        .limit(1)
-      
-      if (tableError) {
-        console.log('AuthProvider: Profiles table does not exist or is not accessible:', tableError)
-        // If profiles table doesn't exist, just set loading to false and continue
-        setProfile(null)
-        setLoading(false)
-        return
-      }
-
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
 
       console.log('AuthProvider: Profile fetch result:', { data, error })
       
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching profile:', error)
+      if (error) {
+        console.error('AuthProvider: Error fetching profile:', error)
         console.log('AuthProvider: No profile found, user needs to complete setup')
         setProfile(null)
       } else {
-        setProfile(data)
-        console.log('AuthProvider: Profile set:', data)
+        setProfile(data || null)
+        console.log('AuthProvider: Profile set:', data || 'null')
       }
     } catch (error) {
-      console.error('Error fetching profile:', error)
+      console.error('AuthProvider: Unexpected error fetching profile:', error)
       setProfile(null)
     } finally {
       console.log('AuthProvider: Setting loading to false')
@@ -117,6 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const signUp = async (email: string, password: string) => {
+    console.log('AuthProvider: Signing up user:', email)
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -125,6 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const signIn = async (email: string, password: string) => {
+    console.log('AuthProvider: Signing in user:', email)
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -133,6 +136,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const signInWithGoogle = async () => {
+    console.log('AuthProvider: Signing in with Google')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -143,6 +147,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const signOut = async () => {
+    console.log('AuthProvider: Signing out')
     await supabase.auth.signOut()
     setProfile(null)
   }
