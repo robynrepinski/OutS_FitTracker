@@ -18,7 +18,7 @@ interface FormErrors {
 }
 
 function App() {
-  const { user, profile, loading, signUp, signIn, signInWithGoogle } = useAuth();
+  const { user, profile, loading, error, signUp, signIn, signInWithGoogle, clearError } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -31,17 +31,37 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string>('');
 
-  // Show loading spinner while checking authentication
+  // Show loading spinner while checking authentication or loading profile
   if (loading) {
-    console.log('App: Still loading - user:', !!user, 'profile:', !!profile, 'loading:', loading)
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading FitTracker...</p>
-          <p className="text-xs text-gray-400 mt-2">
-            {user ? 'Loading profile...' : 'Checking authentication...'}
-          </p>
+          {user && (
+            <p className="text-xs text-gray-400 mt-2">Loading your profile...</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state with retry option
+  if (error && user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md">
+          <div className="text-red-500 text-4xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <div className="space-y-2">
+            <button onClick={() => window.location.reload()} className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+              Retry
+            </button>
+            <button onClick={clearError} className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+              Continue Anyway
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -49,18 +69,14 @@ function App() {
 
   // Show profile setup if user exists but no profile
   if (user && !profile) {
-    console.log('App: Showing profile setup for user:', user?.email)
     return <ProfileSetup />;
   }
 
   // Show dashboard if user is authenticated and has profile
   if (user && profile) {
-    console.log('App: Showing dashboard for user:', user?.email, 'profile:', profile?.first_name)
     return <Dashboard />;
   }
 
-  console.log('App: Showing auth form - no user authenticated')
-  
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
