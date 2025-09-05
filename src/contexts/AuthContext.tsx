@@ -43,13 +43,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        setLoading(true);
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) {
-          console.error('Session error:', sessionError)
           setSession(null)
           setUser(null)
           setProfile(null)
+          setLoading(false)
           return
         }
         
@@ -62,7 +63,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setProfile(null)
         }
       } catch (error) {
-        console.error('Auth initialization error:', error)
         setSession(null)
         setUser(null)
         setProfile(null)
@@ -86,6 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         setProfile(null)
       }
+      setLoading(false)
     })
 
     return () => subscription.unsubscribe()
@@ -104,14 +105,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Profile doesn't exist - this is normal for new users
           setProfile(null)
         } else {
-          console.error('Unexpected profile error:', error)
           setProfile(null)
         }
       } else {
         setProfile(data)
       }
     } catch (error) {
-      console.error('Profile fetch failed:', error)
       setProfile(null)
     }
   }
