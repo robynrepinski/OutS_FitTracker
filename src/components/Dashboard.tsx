@@ -14,15 +14,13 @@ import {
   Activity
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import GoalSetting from './GoalSetting';
 
 const Dashboard: React.FC = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [hasActiveGoal] = useState(true); // Toggle this to test different states
-  const [showGoalSetting, setShowGoalSetting] = useState(false);
 
   // Get user's first name from profile or fallback to email
-  const userName = profile?.first_name || user?.email?.split('@')[0] || 'User';
+  const userName = user?.email?.split('@')[0] || 'User';
 
   // Get current date
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -100,15 +98,11 @@ const Dashboard: React.FC = () => {
   };
 
   const handleSetNewGoal = () => {
-    setShowGoalSetting(true);
+    console.log('Setting new goal...');
   };
 
   const handleConfigureGoals = () => {
-    setShowGoalSetting(true);
-  };
-
-  if (showGoalSetting) {
-    return <GoalSetting onBack={() => setShowGoalSetting(false)} />;
+    console.log('Configuring goals...');
   };
 
   return (

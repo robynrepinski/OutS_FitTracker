@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import ProfileSetup from './components/ProfileSetup';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Dashboard from './components/Dashboard';
-import GoalSetting from './components/GoalSetting';
 import { useAuth } from './contexts/AuthContext';
 
 interface FormData {
@@ -18,7 +16,7 @@ interface FormErrors {
 }
 
 function App() {
-  const { user, profile, loading, error, signUp, signIn, signInWithGoogle, clearError } = useAuth();
+  const { user, loading, signUp, signIn, signInWithGoogle } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -43,34 +41,8 @@ function App() {
     );
   }
 
-  // Show error state with retry option (only for critical errors)
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md">
-          <div className="text-red-500 text-4xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <div className="space-y-2">
-            <button onClick={() => window.location.reload()} className="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-              Retry
-            </button>
-            <button onClick={clearError} className="w-full px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-              Continue Anyway
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Show profile setup if user exists but no profile
-  if (user && !profile) {
-    return <ProfileSetup />;
-  }
-
-  // Show dashboard if user is authenticated and has profile
-  if (user && profile) {
+  // Show dashboard if user is authenticated
+  if (user) {
     return <Dashboard />;
   }
 
