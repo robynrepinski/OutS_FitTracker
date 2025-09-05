@@ -43,14 +43,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        setLoading(true)
-        setError(null)
-        
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
         if (sessionError) {
-          setError('Failed to get session')
-          setLoading(false)
+          console.error('Session error:', sessionError)
+          setSession(null)
+          setUser(null)
+          setProfile(null)
           return
         }
         
@@ -61,11 +60,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await fetchProfile(session.user.id)
         } else {
           setProfile(null)
-          setLoading(false)
         }
       } catch (error) {
-        setError('Failed to initialize authentication')
+        console.error('Auth initialization error:', error)
+        setSession(null)
+        setUser(null)
         setProfile(null)
+      } finally {
         setLoading(false)
       }
     }
@@ -76,7 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setLoading(true)
+      setError(null)
       setSession(session)
       setUser(session?.user ?? null)
       
@@ -84,7 +85,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await fetchProfile(session.user.id)
       } else {
         setProfile(null)
-        setLoading(false)
       }
     })
 
@@ -93,8 +93,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      setError(null)
-      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -102,21 +100,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .single()
 
       if (error) {
-        // If profile doesn't exist, that's expected for new users
         if (error.code === 'PGRST116') {
+          // Profile doesn't exist - this is normal for new users
           setProfile(null)
         } else {
-          console.error('Profile fetch error:', error)
+          console.error('Unexpected profile error:', error)
           setProfile(null)
         }
       } else {
         setProfile(data)
       }
     } catch (error) {
-      console.error('Unexpected profile error:', error)
+      console.error('Profile fetch failed:', error)
       setProfile(null)
-    } finally {
-      setLoading(false)
     }
   }
 

@@ -31,23 +31,20 @@ function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string>('');
 
-  // Show loading spinner while checking authentication or loading profile
+  // Show loading spinner while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading FitTracker...</p>
-          {user && (
-            <p className="text-xs text-gray-400 mt-2">Loading your profile...</p>
-          )}
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Show error state with retry option
-  if (error && user) {
+  // Show error state with retry option (only for critical errors)
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-2xl p-8 text-center max-w-md">
@@ -77,6 +74,7 @@ function App() {
     return <Dashboard />;
   }
 
+  // Show login/signup form if no user
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
