@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import ProfileSetup from './components/ProfileSetup';
 import Dashboard from './components/Dashboard';
+import GoalSetting from './components/GoalSetting';
 import { useAuth } from './contexts/AuthContext';
 
 interface FormData {
@@ -18,6 +19,7 @@ interface FormErrors {
 
 function App() {
   const { user, profile, loading, signUp, signIn } = useAuth();
+  const [showGoalSetting, setShowGoalSetting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -49,8 +51,9 @@ function App() {
 
   // Show dashboard if user is authenticated and has profile
   if (user && profile) {
-    return <Dashboard />;
+    return showGoalSetting ? <GoalSetting /> : <Dashboard />;
   }
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 

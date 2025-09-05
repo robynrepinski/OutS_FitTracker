@@ -98,7 +98,8 @@ const Dashboard: React.FC = () => {
   };
 
   const handleSetNewGoal = () => {
-    console.log('Setting new goal...');
+    // This would trigger the goal setting component
+    console.log('Opening goal setting...');
   };
 
   return (
