@@ -14,6 +14,10 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
+interface GoalSettingProps {
+  onBack?: () => void;
+}
+
 interface GoalData {
   goalType: string;
   timeline: string;
@@ -34,7 +38,7 @@ interface GoalOption {
   bgColor: string;
 }
 
-const GoalSetting: React.FC = () => {
+const GoalSetting: React.FC<GoalSettingProps> = ({ onBack }) => {
   const { user, updateProfile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedGoal, setSelectedGoal] = useState<string>('');
@@ -153,6 +157,9 @@ const GoalSetting: React.FC = () => {
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+    } else if (onBack) {
+      // If we're on step 1 and have an onBack prop, go back to dashboard
+      onBack();
     }
   };
 
@@ -182,6 +189,11 @@ const GoalSetting: React.FC = () => {
       
       // In a real app, you'd redirect to dashboard or show success
       alert('Goal created successfully! 🎉');
+      
+      // Call onBack if provided to return to dashboard
+      if (onBack) {
+        onBack();
+      }
       
     } catch (error) {
       setSubmitError('Failed to save your goal. Please try again.');

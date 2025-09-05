@@ -14,10 +14,12 @@ import {
   Activity
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import GoalSetting from './GoalSetting';
 
 const Dashboard: React.FC = () => {
   const { user, profile, signOut } = useAuth();
   const [hasActiveGoal] = useState(true); // Toggle this to test different states
+  const [showGoalSetting, setShowGoalSetting] = useState(false);
 
   // Get user's first name from profile or fallback to email
   const userName = profile?.first_name || user?.email?.split('@')[0] || 'User';
@@ -98,8 +100,15 @@ const Dashboard: React.FC = () => {
   };
 
   const handleSetNewGoal = () => {
-    // This would trigger the goal setting component
-    console.log('Opening goal setting...');
+    setShowGoalSetting(true);
+  };
+
+  const handleConfigureGoals = () => {
+    setShowGoalSetting(true);
+  };
+
+  if (showGoalSetting) {
+    return <GoalSetting onBack={() => setShowGoalSetting(false)} />;
   };
 
   return (
@@ -237,15 +246,13 @@ const Dashboard: React.FC = () => {
                   <span>Browse Workouts</span>
                 </button>
 
-                {!hasActiveGoal && (
-                  <button
-                    onClick={handleSetNewGoal}
-                    className="px-6 py-3 bg-blue-100 text-blue-700 font-semibold rounded-xl hover:bg-blue-200 transition-all duration-200 flex items-center justify-center space-x-2"
-                  >
-                    <Target className="w-5 h-5" />
-                    <span>Set New Goal</span>
-                  </button>
-                )}
+                <button
+                  onClick={hasActiveGoal ? handleConfigureGoals : handleSetNewGoal}
+                  className="px-6 py-3 bg-blue-100 text-blue-700 font-semibold rounded-xl hover:bg-blue-200 transition-all duration-200 flex items-center justify-center space-x-2"
+                >
+                  <Target className="w-5 h-5" />
+                  <span>{hasActiveGoal ? 'Configure Goals' : 'Set New Goal'}</span>
+                </button>
               </div>
             </div>
           </div>

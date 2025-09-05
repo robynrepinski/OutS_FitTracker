@@ -19,7 +19,6 @@ interface FormErrors {
 
 function App() {
   const { user, profile, loading, signUp, signIn, signInWithGoogle } = useAuth();
-  const [showGoalSetting, setShowGoalSetting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -51,7 +50,7 @@ function App() {
 
   // Show dashboard if user is authenticated and has profile
   if (user && profile) {
-    return showGoalSetting ? <GoalSetting /> : <Dashboard />;
+    return <Dashboard />;
   }
 
   const validateForm = (): boolean => {
