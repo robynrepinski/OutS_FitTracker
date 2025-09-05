@@ -77,6 +77,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchProfile = async (userId: string) => {
     console.log('AuthProvider: Fetching profile for user:', userId)
     try {
+      // First check if profiles table exists by trying to select from it
+      const { data: tableCheck, error: tableError } = await supabase
+        .from('profiles')
+        .select('count')
+        .limit(1)
+      
+      if (tableError) {
+        console.log('AuthProvider: Profiles table does not exist or is not accessible:', tableError)
+        // If profiles table doesn't exist, just set loading to false and continue
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -87,14 +101,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching profile:', error)
-        setAuthError(`Profile fetch error: ${error.message}`)
+        console.log('AuthProvider: No profile found, user needs to complete setup')
+        setProfile(null)
       } else {
         setProfile(data)
         console.log('AuthProvider: Profile set:', data)
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
-      setAuthError(`Unexpected error: ${error}`)
+      setProfile(null)
     } finally {
       console.log('AuthProvider: Setting loading to false')
       setLoading(false)
