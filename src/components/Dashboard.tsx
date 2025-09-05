@@ -13,10 +13,14 @@ import {
   Award,
   Activity
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Dashboard: React.FC = () => {
-  const [userName] = useState('Alex');
+  const { user, profile, signOut } = useAuth();
   const [hasActiveGoal] = useState(true); // Toggle this to test different states
+
+  // Get user's first name from profile or fallback to email
+  const userName = profile?.first_name || user?.email?.split('@')[0] || 'User';
 
   // Get current date
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -77,9 +81,12 @@ const Dashboard: React.FC = () => {
 
   const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
 
-  const handleLogout = () => {
-    console.log('Logging out...');
-    // Here you would typically clear auth state and redirect
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const handleStartWorkout = () => {

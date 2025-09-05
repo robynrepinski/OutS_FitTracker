@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { User, Calendar, Scale, Target, ChevronLeft, ChevronRight, Check } from 'lucide-react';
-
-interface ProfileSetupProps {
-  onComplete?: () => void;
-}
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProfileData {
   firstName: string;
@@ -30,7 +27,8 @@ interface UnitPreferences {
   height: 'cm' | 'ft';
 }
 
-const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
+const ProfileSetup: React.FC = () => {
+  const { updateProfile } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [profileData, setProfileData] = useState<ProfileData>({
     firstName: '',
@@ -47,6 +45,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
     height: 'cm'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string>('');
 
   const genderOptions = [
     { value: '', label: 'Select Gender' },
@@ -162,21 +161,30 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
     }
 
     setIsSubmitting(true);
+    setSubmitError('');
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Complete Profile Data:', {
-        ...profileData,
-        units,
-        completedAt: new Date().toISOString()
+    try {
+      const { error } = await updateProfile({
+        first_name: profileData.firstName,
+        last_name: profileData.lastName,
+        date_of_birth: profileData.dateOfBirth,
+        gender: profileData.gender,
+        weight: parseFloat(profileData.weight),
+        height: parseFloat(profileData.height),
+        fitness_goal: profileData.fitnessGoal,
+        weight_unit: units.weight,
+        height_unit: units.height,
       });
-      setIsSubmitting(false);
-      
-      // Navigate to dashboard
-      if (onComplete) {
-        onComplete();
+
+      if (error) {
+        setSubmitError(error.message);
       }
-    }, 1500);
+      // If successful, the AuthContext will automatically redirect to dashboard
+    } catch (error) {
+      setSubmitError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleWeightUnit = () => {
@@ -444,6 +452,13 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
                   <p className="mt-1 text-sm text-red-600">{errors.fitnessGoal}</p>
                 )}
               </div>
+
+              {/* Submit Error Message */}
+              {submitError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-red-600 text-sm">{submitError}</p>
+                </div>
+              )}
 
               {/* Navigation Buttons */}
               <div className="flex space-x-4">

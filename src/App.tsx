@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import ProfileSetup from './components/ProfileSetup';
 import Dashboard from './components/Dashboard';
+import { useAuth } from './contexts/AuthContext';
 
 interface FormData {
   email: string;
@@ -16,6 +17,7 @@ interface FormErrors {
 }
 
 function App() {
+  const { user, profile, loading, signUp, signIn } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -26,9 +28,29 @@ function App() {
   });
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [authError, setAuthError] = useState<string>('');
 
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show profile setup if user exists but no profile
+  if (user && !profile) {
+    return <ProfileSetup />;
+  }
+
+  // Show dashboard if user is authenticated and has profile
+  if (user && profile) {
+    return <Dashboard />;
+  }
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
@@ -84,51 +106,43 @@ function App() {
     }
 
     setIsSubmitting(true);
+    setAuthError('');
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log(`${isSignUp ? 'Sign Up' : 'Sign In'} attempt:`, {
-        email: formData.email,
-        password: formData.password,
-        ...(isSignUp && { confirmPassword: formData.confirmPassword })
-      });
-      setIsSubmitting(false);
-      
-      // Reset form after successful submission
-      setFormData({
-        email: '',
-        password: '',
-        confirmPassword: ''
-      });
-      setErrors({});
-      
-      // Show profile setup after successful authentication
+    try {
+      let result;
       if (isSignUp) {
-        setShowProfileSetup(true);
+        result = await signUp(formData.email, formData.password);
       } else {
-        setShowDashboard(true);
+        result = await signIn(formData.email, formData.password);
       }
-    }, 1500);
+
+      if (result.error) {
+        setAuthError(result.error.message);
+      } else {
+        // Reset form after successful submission
+        setFormData({
+          email: '',
+          password: '',
+          confirmPassword: ''
+        });
+        setErrors({});
+      }
+    } catch (error) {
+      setAuthError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const toggleMode = () => {
     setIsSignUp(!isSignUp);
     setErrors({});
+    setAuthError('');
     setFormData(prev => ({
       ...prev,
       confirmPassword: ''
     }));
   };
-
-  // Show profile setup component if authentication is complete
-  if (showProfileSetup) {
-    return <ProfileSetup onComplete={() => setShowDashboard(true)} />;
-  }
-
-  // Show dashboard after profile setup or direct login
-  if (showDashboard) {
-    return <Dashboard />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 flex items-center justify-center p-4">
@@ -231,6 +245,13 @@ function App() {
                 {errors.confirmPassword && (
                   <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
                 )}
+              </div>
+            )}
+
+            {/* Auth Error Message */}
+            {authError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-red-600 text-sm">{authError}</p>
               </div>
             )}
 
