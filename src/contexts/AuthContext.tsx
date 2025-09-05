@@ -46,9 +46,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLoading(true)
         setError(null)
         
-        const { data: { session }, error } = await supabase.auth.getSession()
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
         
-        if (error) {
+        if (sessionError) {
           setError('Failed to get session')
           setLoading(false)
           return
@@ -60,10 +60,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (session?.user) {
           await fetchProfile(session.user.id)
         } else {
+          setProfile(null)
           setLoading(false)
         }
       } catch (error) {
         setError('Failed to initialize authentication')
+        setProfile(null)
         setLoading(false)
       }
     }
@@ -74,6 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setLoading(true)
       setSession(session)
       setUser(session?.user ?? null)
       
@@ -96,21 +99,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle()
+        .single()
 
       if (error) {
-        // If it's a "not found" type error, that's expected for new users
-        if (error.code === 'PGRST116' || error.message.includes('No rows found')) {
+        // If profile doesn't exist, that's expected for new users
+        if (error.code === 'PGRST116') {
           setProfile(null)
         } else {
-          setError('Failed to load profile')
+          console.error('Profile fetch error:', error)
+          setProfile(null)
         }
-        setProfile(null)
       } else {
-        setProfile(data || null)
+        setProfile(data)
       }
     } catch (error) {
-      setError('Unexpected error loading profile')
+      console.error('Unexpected profile error:', error)
       setProfile(null)
     } finally {
       setLoading(false)
